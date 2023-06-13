@@ -22,3 +22,5 @@ The python libraries I used were tkinter and Sqlite3
 # Future Work
 
 * Improve design/spacing of GUI
+* Better organization of the project's code
+* Joining of similar functions within the project
