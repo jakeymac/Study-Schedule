@@ -7,14 +7,6 @@ import sqlite3 as sql
 connect = sql.connect("server.db")
 cursor = connect.cursor()
 
-#TO DO:
-#ADD SUPPORT FOR VIEWING STUDY AND PARTICIPANT INFO
-#ADD SUPPORT FOR VIEWING AND EXPORING TO TEXT FILE A PARTICIPANT'S SCHEDULE
-#ADD SUPPORT FOR VIEWING THE ENTIRE SCHEDULE OF AN ENTIRE STUDY FOR ALL PARTICIPANTS(NOTEBOOK TKINTER)
-
-#Sort when displaying the dates and times/in house vs follow-up
-
-
 class Main():
     def __init__(self,root):
         self.root = root
