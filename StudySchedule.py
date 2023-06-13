@@ -7,16 +7,24 @@ import sqlite3 as sql
 connect = sql.connect("server.db")
 cursor = connect.cursor()
 
+#TO DO:
+#ADD SUPPORT FOR VIEWING STUDY AND PARTICIPANT INFO
+#ADD SUPPORT FOR VIEWING AND EXPORING TO TEXT FILE A PARTICIPANT'S SCHEDULE
+#ADD SUPPORT FOR VIEWING THE ENTIRE SCHEDULE OF AN ENTIRE STUDY FOR ALL PARTICIPANTS(NOTEBOOK TKINTER)
+
+#Sort when displaying the dates and times/in house vs follow-up
+
+
 class Main():
     def __init__(self,root):
         self.root = root
         self.root.title("StudySchedule")
-        
+
         self.main_menu()
 
     def main_menu(self):
         self.main_menu_frame = tk.Frame(self.root)
-        
+        self.root.geometry("")
         self.main_menu_frame.pack()
 
         self.main_menu_top_label = tk.Label(self.main_menu_frame,text="Welcome to StudySchedule")
@@ -46,7 +54,6 @@ class Main():
         self.exit_program_button = tk.Button(self.main_menu_frame,text="Exit",command=self.close_program)
         self.exit_program_button.grid(row=3,column=2)
 
-
     def open_schedule_study_pickers_window(self):
         self.main_menu_frame.destroy()
         self.schedule_study_picker_frame = tk.Frame(self.root)
@@ -56,11 +63,15 @@ class Main():
         self.schedule_study_picker_label.grid(row=0,column=0)
 
         study_names = self.get_study_names()
-        print(study_names)
+        if study_names:
 
-        self.schedule_study_picker_var = tk.StringVar()
-        self.schedule_study_picker = tk.OptionMenu(self.schedule_study_picker_frame,self.schedule_study_picker_var,*study_names,command=self.place_open_schedule_button)
-        self.schedule_study_picker.grid(row=1,column=0)
+            self.schedule_study_picker_var = tk.StringVar()
+            self.schedule_study_picker = tk.OptionMenu(self.schedule_study_picker_frame,self.schedule_study_picker_var,*study_names,command=self.place_open_schedule_button)
+            self.schedule_study_picker.grid(row=1,column=0)
+
+        else:
+            self.empty_label = tk.Label(self.schedule_study_picker_frame,text="Sorry, there are no \nexisting studies")
+            self.empty_label.grid(row=1,column=0)
 
         self.exit_open_schedule_study_picker_button = tk.Button(self.schedule_study_picker_frame,text="Back to Main Menu",command=self.exit_schedule_study_picker)
         self.exit_open_schedule_study_picker_button.grid(row=3,column=0)
@@ -78,17 +89,17 @@ class Main():
         self.study_schedule_label.grid(row=0,column=0,columnspan=2)
         
         #Find study id
-        cursor.execute(f"""SELECT study_id FROM study WHERE study_name = "{self.schedule_study_picker_var.get()}" """)
+        cursor.execute(f"""SELECT study_id FROM study WHERE study_name = '{self.schedule_study_picker_var.get()}' """)
+        
         study_id = cursor.fetchone()[0]
 
-        print(f"Study ID: {study_id}")
-        cursor.execute(f"SELECT date FROM Study_Date_Times WHERE study_id = {study_id}")
+        cursor.execute(f"SELECT date FROM Study_Date_Times WHERE study_id = '{study_id}'")
         dates = [date[0] for date in cursor.fetchall()]
-        print(dates)
+        
 
         #initials_list
-        cursor.execute(f"SELECT initials,participant_id FROM Participant WHERE study_id = {study_id}")
-
+        cursor.execute(f"SELECT initials,participant_id FROM Participant WHERE study_id = '{study_id}'")
+        
         initials_and_id = cursor.fetchall()
 
         columns = ["Name" + " | "]
@@ -100,14 +111,18 @@ class Main():
         self.total_schedule = [columns]
 
         for participant in initials_and_id:
-            values = [participant[0] + "  | "]
+            if len(participant[0]) == 4:
+                values = [participant[0] + " | "]
+            else:
+                values = [participant[0] + "  | "]
             for date in dates:
-                cursor.execute(f"""SELECT time FROM Participant_Date_Times WHERE date = "{date}" AND participant_id = {participant[1]} """)
-                time = cursor.fetchone()[0]
+                cursor.execute(f"""SELECT time FROM Participant_Date_Times WHERE date = '{date}' AND participant_id = '{participant[1]}' """)
+                time = str(cursor.fetchone()[0])
                 if len(time) == 6:
+
                     values.append(" " + time + "  | ")
                 else:
-                    values.append(time+ "  | ")
+                    values.append(time + "  | ")
 
             values[-1] = values[-1][0:-2]
             self.total_schedule.append(values)
@@ -131,7 +146,6 @@ class Main():
         for line in self.total_schedule:
             new_line = "".join(line) + "\n"
             self.final_schedule_string += new_line
-            print(new_line)
             self.study_schedule_widget.insert(tk.END,new_line)
 
         self.exit_schedule_button = tk.Button(self.view_study_schedule_frame,text="Back to Main Menu",command=self.exit_view_schedule)
@@ -150,34 +164,43 @@ class Main():
         self.export_schedule_button.grid(row=1,column=0,columnspan=2)
     
     def export_entire_schedule(self):
-        new_file = open(self.export_entry.get(),"a")
-        new_file.write(self.final_schedule_string)
-        new_file.close()
-        tk_mb.showinfo(message=f"Exported successfuly to {self.export_entry.get()}")
+        if self.export_entry.get() != "":
+            try:
+                new_file = open(self.export_entry.get(),"a")
+                new_file.write(self.final_schedule_string)
+                new_file.close()
+                tk_mb.showinfo(message=f"Exported successfuly to {self.export_entry.get()}")
+            except:
+                tk_mb.showinfo(message=f"Sorry, couldn't find file {self.export_entry.get()}")
 
     def open_view_participant_study_picker_window(self):
         self.main_menu_frame.destroy()
+        self.root.geometry("")
         self.view_participant_pickers_frame = tk.Frame(self.root)
         self.view_participant_pickers_frame.pack()
 
         study_names = self.get_study_names()
+        if study_names:
 
-        self.view_participant_study_picker_label = tk.Label(self.view_participant_pickers_frame,text="Select Study:")
-        self.view_participant_study_picker_label.grid(row=0,column=0)
+            self.view_participant_study_picker_label = tk.Label(self.view_participant_pickers_frame,text="Select Study:")
+            self.view_participant_study_picker_label.grid(row=0,column=0)
 
-        self.view_participant_study_picker_var = tk.StringVar()
-        self.view_participant_study_picker = tk.OptionMenu(self.view_participant_pickers_frame,self.view_participant_study_picker_var,*study_names,command=self.open_view_participant_initials_picker)
-        self.view_participant_study_picker.grid(row=1,column=0)
+            self.view_participant_study_picker_var = tk.StringVar()
+            self.view_participant_study_picker = tk.OptionMenu(self.view_participant_pickers_frame,self.view_participant_study_picker_var,*study_names,command=self.open_view_participant_initials_picker)
+            self.view_participant_study_picker.grid(row=1,column=0)
+
+        else:
+            self.empty_label = tk.Label(self.view_participant_pickers_frame,text="Sorry, there are no \nexisting studies")
+            self.empty_label.grid(row=1,column=0)
 
         self.view_participant_exit_button = tk.Button(self.view_participant_pickers_frame,text="Back to Main Menu",command=self.exit_view_participant_menu)
         self.view_participant_exit_button.grid(row=5,column=0)
 
-        self.view_participant_initials_picker_open = False
-        self.open_participant_view_button_placed = False
+        
 
     def open_view_participant_initials_picker(self,*args):
-        if self.view_participant_initials_picker_open:
-            self.view_participant_initials_picker_frame.destroy()
+        #if self.view_participant_initials_picker_open:
+            #self.view_participant_initials_picker_frame.destroy()
         
         if self.open_participant_view_button_placed:
             self.open_view_participant_button.config(text=f"View{self.view_participant_initials_picker_var.get()}'s Info")
@@ -208,8 +231,10 @@ class Main():
         cursor.execute(f"""SELECT * FROM participant WHERE initials = "{self.view_participant_initials_picker_var.get()}" """)
         participant_info= cursor.fetchall()[0]
         
-        self.view_participant_info_frame = tk.Frame(self.root)
-        self.view_participant_info_frame.pack()
+        self.view_participant_master_frame = tk.Frame(self.root)
+        self.view_participant_master_frame.pack()
+        self.view_participant_info_frame = tk.Frame(self.view_participant_master_frame)
+        self.view_participant_info_frame.grid(row=0,column=0)
 
         self.view_participant_id = participant_info[0]
         first_name = participant_info[1]
@@ -222,21 +247,18 @@ class Main():
         date_info = cursor.fetchall()
 
         self.participant_initials_label = tk.Label(self.view_participant_info_frame,text=f"Participant {initials}")
-        self.participant_initials_label.grid(row=0,column=0)
+        self.participant_initials_label.grid(row=0,column=0,columnspan=2)
 
-        self.view_participant_main_info_frame = tk.Frame(self.view_participant_info_frame)
-        self.view_participant_main_info_frame.grid(row=1,column=0)
-
-        first_name_label = tk.Label(self.view_participant_main_info_frame,text=f"First Name: {first_name}")
+        first_name_label = tk.Label(self.view_participant_info_frame,text=f"First Name: {first_name}")
         
-        last_name_label = tk.Label(self.view_participant_main_info_frame,text=f"Last Name: {last_name}")
+        last_name_label = tk.Label(self.view_participant_info_frame,text=f"Last Name: {last_name}")
 
-        initials_label = tk.Label(self.view_participant_main_info_frame,text=f"Initials: {initials}")
+        initials_label = tk.Label(self.view_participant_info_frame,text=f"Initials: {initials}")
 
-        birthday_label = tk.Label(self.view_participant_main_info_frame,text=f"Birthday: {birthday}")
+        birthday_label = tk.Label(self.view_participant_info_frame,text=f"Birthday: {birthday}")
 
-        other_info_label = tk.Label(self.view_participant_main_info_frame,text=f"Other Info:")
-        self.view_other_info_entry = tk.Text(self.view_participant_main_info_frame,height=7,width=35)
+        other_info_label = tk.Label(self.view_participant_info_frame,text=f"Other Info:")
+        self.view_other_info_entry = tk.Text(self.view_participant_info_frame,height=7,width=35)
         self.view_other_info_entry.insert(tk.END,other_info)
         self.view_other_info_entry.config(state=tk.DISABLED)
         
@@ -248,10 +270,7 @@ class Main():
         self.view_other_info_entry.grid(row=6,column=0)
 
         self.view_participant_times_frame = tk.Frame(self.view_participant_info_frame)
-        self.view_participant_times_frame.grid(row=2,column=1)
-
-        self.view_participant_times_widget = tk.Text(self.view_participant_info_frame,height=30,width=25)
-        self.view_participant_times_widget.grid(row=1,column=1)
+        self.view_participant_times_frame.grid(row=7,column=0)
 
         self.view_participant_times_dict = {}
         current_row = 0
@@ -262,8 +281,8 @@ class Main():
             in_house = "\nIn House"
             if day[2] == 0:
                 in_house = "\nFollow-Up Visit"
-
-            self.view_participant_times_widget.insert(tk.END,f"{date} : {time} {in_house}\n\n")
+            new_date_label = tk.Label(self.view_participant_times_frame,text=f"{date} : {time} {in_house}")
+            new_date_label.grid(row=current_row,column=0)
             
             current_row += 1
 
@@ -273,25 +292,35 @@ class Main():
         back_to_pickers_button = tk.Button(self.view_participant_info_frame,text="Select Other Participant",command=self.back_to_view_participant_pickers)
         back_to_pickers_button.grid(row=10,column=0)
 
+        self.view_participant_scrollbar = ttk.Scrollbar(self.root,)
+
     def open_edit_participant_study_picker_window(self):
         self.main_menu_frame.destroy()
         self.edit_participant_pickers_frame = tk.Frame(self.root)
         self.edit_participant_pickers_frame.pack()
 
         study_names = self.get_study_names()
+        if study_names:
         
-        self.edit_participant_study_picker_label = tk.Label(self.edit_participant_pickers_frame,text="Select Study:")
-        self.edit_participant_study_picker_label.grid(row=0,column=0)
+            self.edit_participant_study_picker_label = tk.Label(self.edit_participant_pickers_frame,text="Select Study:")
+            self.edit_participant_study_picker_label.grid(row=0,column=0)
 
-        self.edit_participant_study_picker_var = tk.StringVar()
-        self.edit_participant_study_picker = tk.OptionMenu(self.edit_participant_pickers_frame,self.edit_participant_study_picker_var,*study_names,command=self.open_edit_participant_intials_picker)
-        self.edit_participant_study_picker.grid(row=1,column=0)
+            self.edit_participant_study_picker_var = tk.StringVar()
+            self.edit_participant_study_picker = tk.OptionMenu(self.edit_participant_pickers_frame,self.edit_participant_study_picker_var,*study_names,command=self.open_edit_participant_intials_picker)
+            self.edit_participant_study_picker.grid(row=1,column=0)
 
+            self.edit_participant_initials_picker_open = False
+            self.open_participant_edit_button_placed = False
+
+        else:
+            self.empty_label = tk.Label(self.edit_participant_pickers_frame,text="Sorry, there are no \nexisting studies")
+            self.empty_label.grid(row=1,column=0)
+
+        
         self.edit_participant_exit_button = tk.Button(self.edit_participant_pickers_frame,text="Back to Main Menu",command=self.exit_edit_participant_menu)
         self.edit_participant_exit_button.grid(row=5,column=0)
 
-        self.edit_participant_initials_picker_open = False
-        self.open_participant_edit_button_placed = False
+        
 
     def open_edit_participant_intials_picker(self,*args):
         if self.edit_participant_initials_picker_open:
@@ -464,22 +493,30 @@ class Main():
 
         self.edit_study_picker_var = tk.StringVar()
         study_names = self.get_study_names()
-        self.study_edit_open = False
-        self.edit_study_picker = ttk.OptionMenu(self.edit_study_master_frame,self.edit_study_picker_var,"",*study_names,command=self.open_edit_study_window)
-        self.edit_study_picker.grid(row=1,column=0)
+        if study_names:
+            self.study_edit_open = False
+            self.edit_study_picker = ttk.OptionMenu(self.edit_study_master_frame,self.edit_study_picker_var,"",*study_names,command=self.open_edit_study_window)
+            self.edit_study_picker.grid(row=1,column=0)
+        else:
+            self.empty_label = tk.Label(self.edit_study_master_frame,text="Sorry, there are no \nexisting studies")
+            self.empty_label.grid(row=1,column=0)
 
-        self.exit_study_edit_button = tk.Button(self.edit_study_master_frame,text="Back to Main Menu",command=self.exit_edit_study_window)
+        self.exit_study_edit_button = tk.Button(self.edit_study_master_frame,text="Back to Main Menu",command=self.exit_edit_study_picker_window)
         self.exit_study_edit_button.grid(row=3,column=0)
 
         self.open_edit_study = False
         
     def open_edit_study_window(self,*args):
+        self.root.geometry("")
         if self.open_edit_study:
             self.edit_study_frame.destroy()
-
+        
         self.open_edit_study = True
 
-        self.edit_study_frame = tk.Frame(self.edit_study_master_frame)
+
+        self.edit_study_master_frame.destroy()
+
+        self.edit_study_frame = tk.Frame(self.root)
         self.edit_study_frame.grid(row=2,column=0)
 
         study_name = self.edit_study_picker_var.get()
@@ -527,10 +564,109 @@ class Main():
             if in_house == 1:
                 new_check_button.select()
             
+            self.delete_buttons = {}
+            new_delete_button = tk.Button(self.edit_dates_frame,text="Delete",command=lambda study_name=study_name, date=date,date_entry=new_date_entry,check_button=new_check_button,current_row=current_row:self.delete_study_date(study_name,date,date_entry,check_button,current_row))
+            new_delete_button.grid(row=current_row,column=2)
+
+            self.delete_buttons[current_row] = new_delete_button
+
             current_row += 1
 
+        self.new_date_button = tk.Button(self.edit_dates_frame,text="Add Dates",command=lambda :self.add_more_study_dates(study_name))
+        self.new_date_button.grid(row=current_row,column=0,columnspan=2)
+
         self.edit_study_save_button = tk.Button(self.edit_dates_frame,text="Save",command=self.finalize_edit_study)
-        self.edit_study_save_button.grid(row=current_row,column=0,columnspan=2)
+        self.edit_study_save_button.grid(row=current_row+1,column=0,columnspan=2)
+        self.back_to_main_menu_button = tk.Button(self.edit_dates_frame,text="Back to Main Menu",command=self.exit_edit_study_window)
+        self.back_to_main_menu_button.grid(row=current_row+2,column=0,columnspan=2)
+
+    def delete_study_date(self,study_name,date,date_entry,check_button,current_row):
+        print(current_row)
+        date_entry.destroy()
+        check_button.destroy()
+        self.delete_buttons.get(current_row).destroy()
+
+        cursor.execute(f"""SELECT study_id FROM study WHERE study_name = '{study_name}'""")
+        study_id = cursor.fetchone()[0]
+
+        cursor.execute(f"""DELETE FROM Participant_Date_Times 
+                          WHERE study_id = '{study_id}' AND date = '{date}'""")
+        
+        connect.commit()
+
+        cursor.execute(f"""DELETE FROM Study_Date_Times 
+                          WHERE study_id = '{study_id}' AND date = '{date}'""")
+        
+        connect.commit()
+
+
+    def add_more_study_dates(self,study_name):
+        self.current_changes =  []
+        for entry in self.edit_date_entries:
+            self.current_changes.append(entry.get())
+
+        self.edit_study_frame.destroy()
+        self.open_edit_study=False
+        self.adding_study_dates_frame = tk.Frame(self.root)
+        self.adding_study_dates_frame.pack()
+        self.new_date_entry = tkcalendar.DateEntry(self.adding_study_dates_frame,selectmode="day")
+        self.new_date_entry.grid(row=1,column=0) 
+               
+        self.new_date_in_house_var = tk.IntVar()
+        in_house_check = tk.Checkbutton(self.adding_study_dates_frame,text="In-House Visit",variable=self.new_date_in_house_var,onvalue=1,offvalue=0)
+        in_house_check.grid(row=1,column=1)
+
+        self.new_dates = []
+        self.adding_study_dates_add_date_button = tk.Button(self.adding_study_dates_frame, text="Add Date", command=lambda:self.add_new_date(study_name))
+        self.adding_study_dates_add_date_button.grid(row=2,column=1)
+
+        self.return_to_edit_button = tk.Button(self.adding_study_dates_frame,text="Return to Study Info",command=self.exit_add_new_date_menu)
+        self.return_to_edit_button.grid(row=3,column=1)
+
+        self.new_dates_frame = tk.Frame(self.adding_study_dates_frame)
+        self.new_dates_frame.grid(row=2,column=0)
+
+
+    def exit_add_new_date_menu(self):
+        self.adding_study_dates_frame.destroy()
+        self.open_edit_study_window()
+
+    def add_new_date(self,study_name):
+        print("Testingggg")
+        cursor.execute(F"""SELECT study_id FROM study WHERE study_name = '{study_name}' """)
+        study_id = cursor.fetchone()[0]
+
+        
+        date = self.new_date_entry.get_date().strftime("%m-%d-%y")
+        in_house = self.new_date_in_house_var.get()
+
+        
+        if date not in self.current_changes and date not in self.new_dates:
+            cursor.execute(f"""INSERT INTO Study_Date_Times 
+                               (study_id,date,is_in_house) 
+                               VALUES ('{study_id}', '{date}', '{in_house}')""")
+            connect.commit()
+
+            cursor.execute(f"SELECT participant_id FROM Participant WHERE study_id = '{study_id}'")
+            participants = cursor.fetchall()
+            for participant in participants:
+                cursor.execute(f"""INSERT INTO Participant_Date_Times
+                                    (study_id,participant_id,date,is_in_house,time)
+                                    VALUES('{study_id}','{participant[0]}','{date}','{in_house}','')""")
+                connect.commit()
+
+                
+            in_house_text = "In House" if in_house == 1 else "Follow-Up Visit"
+
+            new_label = tk.Label(self.new_dates_frame,text=f"{date}-{in_house_text}")
+            new_label.grid(row=len(self.new_dates))
+            self.new_dates.append(date)
+
+            tk_mb.showinfo(message="Date added successfully")
+
+        else:
+            tk_mb.showinfo(message="Sorry, that date already exists.")
+
 
     def finalize_edit_study(self):
         finalize_confirmation = tk_mb.askyesno(title="Save Info",message=f"Are you sure you want to save the info for {self.edit_study_picker_var.get()}?")
@@ -547,7 +683,6 @@ class Main():
 
             for index in range(0,len(self.edit_date_entries)):
                 date = self.edit_date_entries[index].get()
-                print(f"Testing: {date}")
                 in_house = self.edit_in_house_variables[index].get()
                 cursor.execute(f"""UPDATE Study_Date_Times SET date = "{date}", is_in_house = "{in_house}" WHERE study_id = "{study_id}" AND date = "{self.original_dates[index]}" """)
                 connect.commit()
@@ -565,10 +700,18 @@ class Main():
 
         self.add_participant_study_picker_var = tk.StringVar()
         study_names = self.get_study_names()
+        if study_names:
+            self.add_participant_open = False
+            self.add_participant_study_picker = ttk.OptionMenu(self.add_participant_master_frame,self.add_participant_study_picker_var,"",*study_names,command=self.open_add_participant_window)
+            self.add_participant_study_picker.grid(row=1,column=0)
 
-        self.add_participant_open = False
-        self.add_participant_study_picker = ttk.OptionMenu(self.add_participant_master_frame,self.add_participant_study_picker_var,"",*study_names,command=self.open_add_participant_window)
-        self.add_participant_study_picker.grid(row=1,column=0)
+        else:
+            self.empty_label = tk.Label(self.add_participant_master_frame,text="Sorry, there are no \nexisting studies")
+            self.empty_label.grid(row=1,column=0)
+        
+        
+        self.return_button = tk.Button(self.add_participant_master_frame,text="Back to Main Menu",command=self.exit_add_participant_menu)
+        self.return_button.grid(row=2,column=0)
 
     def open_add_participant_window(self,*args):
         if self.add_participant_open:
@@ -660,21 +803,16 @@ class Main():
         other_info = self.add_participant_other_info_entry.get("1.0",tk.END).rstrip()
         essential_info = [first_name,last_name,initials,birthday]
 
-        cursor.execute(f"""SELECT participant_id FROM participant WHERE initials = "{initials}" """)
-        participant_id = cursor.fetchone()
-
-        cursor.execute(f"SELECT initials FROM participant ")
+        cursor.execute(f"SELECT initials FROM participant WHERE study_id = {study_id}")
         all_initials = [initials[0] for initials in cursor.fetchall()]
 
         if initials in all_initials:
             tk_mb.showinfo(message="Sorry, those initials already exist in this study")
 
         else:
-            print("ok go")
             if "" in essential_info:
                 tk_mb.showinfo(message="Make sure all fields are filled out!")
             else:
-                print("ok let's go")
                 all_dates_filled = True
                 for date in self.date_dict:
                     if self.date_dict.get(date)[0].get() == "":
@@ -683,17 +821,16 @@ class Main():
 
                 if not all_dates_filled:
                     tk_mb.showinfo(message="Make sure all dates have a time")
+
                 else:
                     #Place participant info into table
                     cursor.execute(f"""INSERT INTO Participant (study_id,first_name,last_name,initials,birthday,other_info)
                                         VALUES({study_id}, '{first_name}','{last_name}','{initials}','{birthday}',"{other_info}") """)
                     connect.commit()
 
-                    cursor.execute("""SELECT MAX(participant_id) FROM Participant """)
-                    
+                    cursor.execute(f"""SELECT participant_id FROM Participant WHERE initials = '{initials}' """)
 
                     participant_id = cursor.fetchone()[0]
-                    print(f"Inserting into Participant Date Times THIS ID: {participant_id}")
 
                     for date in self.date_dict:
                         time = self.date_dict.get(date)[0].get()
@@ -701,11 +838,26 @@ class Main():
 
                         cursor.execute(f"""INSERT INTO Participant_Date_Times
                                             (study_id,participant_id,date,time,is_in_house)
-                                            VALUES ({study_id},{participant_id},'{date}','{time}',{in_house}) """)
+                                            VALUES ('{study_id}','{participant_id}','{date}','{time}','{in_house}') """)
 
                         connect.commit()
 
                     tk_mb.showinfo(message=f"Participant {initials} has been added to the study")
+
+        first_name = self.add_participant_first_name_entry.get()
+        last_name = self.add_participant_last_name_entry.get()
+        initials = self.add_participant_initials_entry.get()
+        birthday = self.add_participant_birthday_entry.get()
+        other_info = self.add_participant_other_info_entry.get("1.0",tk.END).rstrip()
+        essential_info = [first_name,last_name,initials,birthday]
+
+    def study_already_exists(self,study_name):
+        """Check if there's already a study with a specific name """
+        cursor.execute(f"""SELECT study_name FROM study WHERE study_name = '{study_name}'""")
+        results = cursor.fetchone()
+        if results:
+            return True
+        return False
 
     def add_new_study_window(self):
         self.main_menu_frame.destroy()
@@ -764,14 +916,18 @@ class Main():
         
         self.view_study_picker_var = tk.StringVar()
         study_names = self.get_study_names()
+        if study_names:
+            self.study_view_open = False
+            self.view_study_picker = ttk.OptionMenu(self.view_study_master_frame,self.view_study_picker_var,"",*study_names,command=self.display_study_info)
 
-        self.study_view_open = False
-        self.view_study_picker = ttk.OptionMenu(self.view_study_master_frame,self.view_study_picker_var,"",*study_names,command=self.display_study_info)
-
-        self.view_study_picker.grid(row=1,column=0)
-
-        self.exit_study_info_view_button = tk.Button(self.view_study_master_frame,text="Back to \nMain Menu",command=self.exit_view_study_info_menu)
-        self.exit_study_info_view_button.grid(row=3,column=1,padx=10)
+            self.view_study_picker.grid(row=1,column=0)
+            self.exit_study_info_view_button = tk.Button(self.view_study_master_frame,text="Back to \nMain Menu",command=self.exit_view_study_info_menu)
+            self.exit_study_info_view_button.grid(row=3,column=1,padx=10)
+        else:
+            self.empty_label = tk.Label(self.view_study_master_frame,text="Sorry, there are no \nexisting studies")
+            self.empty_label.grid(row=0,column=0)
+            self.exit_study_info_view_button = tk.Button(self.view_study_master_frame,text="Back to \nMain Menu",command=self.exit_view_study_info_menu)
+            self.exit_study_info_view_button.grid(row=1,column=0)
 
     def display_study_info(self,*args):
         if self.study_view_open:
@@ -817,7 +973,28 @@ class Main():
             label_text = study_dates[date][0] + in_house
 
             new_label = tk.Label(self.view_study_info_frame,text=label_text)
-            new_label.grid(row=2+date,column=0,padx=10)     
+            new_label.grid(row=2+date,column=0,padx=10) 
+
+        delete_study_button = tk.Button(self.view_study_master_frame, text="Delete Study",command=lambda:self.delete_study(study_name))
+        delete_study_button.grid(row=2,column=1,padx=10)
+
+    def delete_study(self,study_name):
+        delete_confirmation = tk_mb.askyesno(title="Are you sure?", message="Are you sure you want to delete this study?")
+        if delete_confirmation:
+            cursor.execute(f"""SELECT study_id FROM study WHERE study_name = '{study_name}'""")
+            study_id = cursor.fetchone()[0]
+            cursor.execute(f"""DELETE FROM Participant WHERE study_id = '{study_id}' """)
+            connect.commit()
+            cursor.execute(f""" DELETE FROM Participant_Date_Times WHERE study_id = '{study_id}'""")
+            connect.commit()
+            cursor.execute(f"""DELETE FROM Study_Date_Times WHERE study_id = '{study_id}'""")
+            connect.commit()
+            cursor.execute(f"""DELETE FROM study WHERE study_id = '{study_id}' """)
+            connect.commit()
+
+            tk_mb.showinfo(message=f"{study_name} study successfully deleted")
+            self.exit_view_study_info_menu()
+
 
     def new_info_add_date_to_list(self):
         if len(self.new_study_date_dict) == 0:
@@ -830,10 +1007,12 @@ class Main():
             type = "Follow Up"
 
         new_date = self.new_info_date_entry.get_date().strftime("%m-%d-%y")
-        self.new_study_date_dict[new_date] = self.in_house.get()
-        
-        new_label = tk.Label(self.new_study_date_list_frame,text=new_date + " - " + type)
-        new_label.grid(row=len(self.new_study_date_dict),column=0)
+        if new_date in self.new_study_date_dict.keys():
+            tk_mb.showinfo(message="Uh oh! Make sure none of your study dates are the same as one another")
+        else:
+            self.new_study_date_dict[new_date] = self.in_house.get()
+            new_label = tk.Label(self.new_study_date_list_frame,text=new_date + " - " + type)
+            new_label.grid(row=len(self.new_study_date_dict),column=0)
         
     def add_dates_to_study(self,study_id,date_list):
         for date in date_list:
@@ -847,36 +1026,31 @@ class Main():
         if study_name == "":
             tk_mb.showinfo(message="Sorry, make sure you add a name for this new study")
         else:
-            study_names = self.get_study_names()
-            is_duplicate = False
-            for study in study_names:
-                if study_name == study[0]:
-                    is_duplicate = True
-                    break
-            if is_duplicate:
+            if self.study_already_exists(study_name):
                 tk_mb.showinfo(message=f"Sorry, try picking another study name, {study_name} already exists in our system.")
             else:
-                is_duplicate_date = False
-                for date in self.new_study_date_dict:
-                    if list(self.new_study_date_dict.keys()).count(date) > 1:
-                        is_duplicate_date = True
-                        break
-                if is_duplicate_date:
-                    tk_mb.showinfo(message="Uh oh! Make sure none of your study dates are the same as one another")
-                else:
-                    cursor.execute(f"""INSERT INTO study (study_name, study_info) VALUES ('{study_name}',"{study_info}")""")
-                    connect.commit()
+                cursor.execute(f"""INSERT INTO study (study_name, study_info) VALUES ('{study_name}',"{study_info}")""")
+                connect.commit()
 
-                    cursor.execute(f"SELECT study_id FROM study WHERE study_name = '{study_name}'")
-                    study_id = tuple(cursor.fetchone())[0]
-                    self.add_dates_to_study(study_id,self.new_study_date_dict)
+                cursor.execute(f"SELECT study_id FROM study WHERE study_name = '{study_name}'")
+                study_id = tuple(cursor.fetchone())[0]
+                self.add_dates_to_study(study_id,self.new_study_date_dict)
 
     def get_study_names(self):
         cursor.execute("SELECT study_name FROM study")
-        return [study[0] for study in cursor.fetchall()]
+        results = cursor.fetchall()
+        if len(results) == 0:
+            return None
+        
+        return [study[0] for study in results]
+    
+
+    def exit_edit_study_picker_window(self):
+        self.edit_study_master_frame.destroy()
+        self.main_menu()
 
     def exit_edit_study_window(self):
-        self.edit_study_master_frame.destroy()
+        self.edit_study_frame.destroy()
         self.main_menu()
 
     def exit_view_study_info_menu(self):
@@ -909,10 +1083,11 @@ class Main():
         
     def back_to_view_participant_pickers(self):
         self.view_participant_info_frame.destroy()
+        self.view_participant_master_frame.destroy()
         self.open_view_participant_study_picker_window()
 
     def close_view_participant_info_window(self):
-        self.view_participant_info_frame.destroy()
+        self.view_participant_master_frame.destroy()
         self.main_menu()
 
     def exit_schedule_study_picker(self):
