@@ -2,7 +2,7 @@
 
 I created this program to help clinics organize their study and participant information. This program uses sqlite3 to interact with an SQL database. Study Schedule is simple to use due to the nature of the GUI system involved. Study Schedule saves and works with multiple studies themselves, all participants involved in each study and saves information including names, birthdays, other related info, and times and dates for each visit of each study. 
 
-[Software Demo Video](http://youtube.link.goes.here](https://youtu.be/2qVCD8vphdY)
+[Software Demo Video](https://youtu.be/2qVCD8vphdY)
 
 # Relational Database
 
