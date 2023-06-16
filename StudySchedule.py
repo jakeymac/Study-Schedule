@@ -2,10 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 import tkcalendar
 import tkinter.messagebox as tk_mb
-import sqlite3 as sql
 
-connect = sql.connect("server.db")
-cursor = connect.cursor()
 
 class Main():
     def __init__(self,root):
