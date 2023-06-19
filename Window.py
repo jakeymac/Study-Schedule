@@ -3,32 +3,42 @@ import tkinter.messagebox as tk_mb
 import tkcalendar
 from tkinter import ttk
 
-
 class Window():
     def __init__(self,db):
+        #Create tkinter instance
         self.root = tk.Tk()
-        self.root.title("StudySchedule")
+        self.root.title("StudySchedule") #Update the text taht shows up on the top border of the window itself, AKA 'title'
 
+        #Assign database connection instance used for this class
         self.db = db
 
+        #Establish a current frame variable
         self.current_frame = None
 
-        self.main_menu()
-        self.root.mainloop()
+        self.main_menu() #Open the main menu
+        self.root.mainloop() #Get tkinter running for this window
     
     def open_frame(self,function):
+        """Serves to open a new frame within the tkinter window\n
+        function: the function that should be run to open a new frame"""
+        #If self.current_frame has been assigned
         if self.current_frame:
+            #Close the current frame to make room for the new one
             self.current_frame.destroy()
-
+        #run the target function to open a new frame
         function()
 
     def main_menu(self):
-        self.main_menu_frame = tk.Frame(self.root)
-        self.root.geometry("")
-        self.main_menu_frame.pack()
+        """Opens the StudySchedule main menu """
 
+        self.main_menu_frame = tk.Frame(self.root) #Create main menu frame
+        self.root.geometry("") #Establish flexible size for the window
+        self.main_menu_frame.pack() 
+
+        #Set/Reset the current frame
         self.current_frame = self.main_menu_frame
 
+        #Establish labels and buttons in the main menu
         self.main_menu_top_label = tk.Label(self.main_menu_frame,text="Welcome to StudySchedule")
         self.main_menu_top_label.grid(row=0,column=0,columnspan=2,pady=5)
     
@@ -57,11 +67,16 @@ class Window():
         self.exit_program_button.grid(row=3,column=2)
 
     def add_new_study_window(self):
-        self.new_study_frame = tk.Frame(self.root)
+        """Opens a new frame to let users enter info for a new study to be added to the database"""
+
+
+        self.new_study_frame = tk.Frame(self.root) #Creates a new "new study" frame
         self.new_study_frame.pack()
 
+        #Reset the current frame
         self.current_frame = self.new_study_frame
-        
+
+        #Establish labels, buttons, and text entries in frame
         self.new_study_top_label = tk.Label(self.new_study_frame,text="Add New Study Information Below")
         self.new_study_top_label.grid(row=0,column=0,columnspan=2)
 
@@ -83,6 +98,7 @@ class Window():
         self.new_info_date_entry = tkcalendar.DateEntry(self.new_study_frame,selectmode="day")
         self.new_info_date_entry.grid(row=6,column=0)
 
+        #Varaible for storing/getting whether or not a date will be an in-house visit/stay, or a follow up visit
         self.in_house = tk.IntVar()
         self.in_house_check = tk.Checkbutton(self.new_study_frame,text="In-House Visit",variable=self.in_house,onvalue=1,offvalue=0)
         self.in_house_check.grid(row=7,column=0)
@@ -90,13 +106,15 @@ class Window():
         self.date_entry_button = tk.Button(self.new_study_frame,text="Add Study Date",command=self.new_info_add_date_to_list)
         self.date_entry_button.grid(row=8,column=0)
 
+
+        #Small frame to hold all the dates that have been chosen so far for the new study
         self.new_study_date_list_frame = tk.Frame(self.new_study_frame)
         self.new_study_date_list_frame.grid(row=9,column=0)
 
         self.top_date_list_label= tk.Label(self.new_study_date_list_frame,text="Dates:")
         self.top_date_list_label.grid(row=0,column=0)
 
-        self.new_study_date_dict = {}
+        self.new_study_date_dict = {} #Dictionary for holding all new dates to be part of the new study
 
         self.back_button = tk.Button(self.new_study_frame,text="Back to Main Menu",command=lambda:self.open_frame(self.main_menu))
         self.back_button.grid(row=11,column=0)
@@ -1065,7 +1083,11 @@ class Window():
         self.export_schedule_button.grid(row=1,column=0,columnspan=2)
 
     def export_entire_schedule(self):
+        """Exports the study's entire schedule to a text file"""
+
+        #Make sure the user has entered a file name to export to
         if self.export_entry.get() != "":
+            #Attempt to write to the chosen text file
             try:
                 new_file = open(self.export_entry.get(),"a")
                 new_file.write(self.final_schedule_string)
@@ -1075,7 +1097,11 @@ class Window():
                 tk_mb.showinfo(message=f"Sorry, couldn't find file {self.export_entry.get()}")
 
     def close_program(self):
+        """Closes the program, after confirming with the user"""
+
+        #Ask the user if they're sure they'd like to exit the program in a seperate pop-up window
         leave = tk_mb.askyesno(message="Are you sure you want to close the program?")
-        if leave:
+        if leave: #If yes is clicked
+            #Close out the program
             exit()
 
