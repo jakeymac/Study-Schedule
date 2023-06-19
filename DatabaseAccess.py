@@ -104,9 +104,9 @@ class DatabaseAccess:
 
         participant_id = self.cursor.fetchone()[0]
 
-        for date in self.date_dict:
-            time = self.date_dict.get(date)[0].get()
-            in_house = self.date_dict.get(date)[1]
+        for date in date_dict:
+            time = date_dict.get(date)[0].get()
+            in_house = date_dict.get(date)[1]
 
             self.cursor.execute(f"""INSERT INTO Participant_Date_Times
                                 (study_id,participant_id,date,time,is_in_house)
