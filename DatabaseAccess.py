@@ -151,15 +151,20 @@ class DatabaseAccess:
         self.connect.commit()
 
         tk_mb.showinfo(message=f"{study_name} study successfully deleted")
-        self.exit_view_study_info_menu()
+        
 
     def get_study_info(self,study_name):
         self.cursor.execute(f""" SELECT study.study_info, Study_Date_Times.date, Study_Date_Times.is_in_house 
                             FROM study INNER JOIN Study_Date_Times 
                             ON Study_Date_Times.study_id = study.study_id 
                             WHERE study_name = '{study_name}' """)
+        
+    def get_study_other_info(self,study_name):
+        self.cursor.execute(f"""SELECT study.study_info
+                            FROM study
+                            WHERE study_name = '{study_name}'""")
 
-        return self.cursor.fetchall()
+        return self.cursor.fetchone()[0]
 
     #NEEDS TO GET THE study_date_dict as a parameter now
     #Can probably delete this method

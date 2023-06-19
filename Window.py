@@ -158,9 +158,6 @@ class Window():
 
                 tk_mb.showinfo(message=f"Successfully added study {study_name}")
 
-
-
-
     def view_study_info_window(self):
         #Initialize new menu
         self.view_study_master_frame = tk.Frame(self.root)
@@ -197,7 +194,7 @@ class Window():
 
         study_name = self.view_study_picker_var.get()
         
-        study_info = self.db.get_study_info(study_name)
+        study_info = self.db.get_study_other_info(study_name)
 
         #cursor.execute(f"SELECT study_info FROM study WHERE study_name = '{study_name}'")
         #study_info = cursor.fetchone()[0]
@@ -250,7 +247,7 @@ class Window():
             self.db.delete_study(study_name)
 
             tk_mb.showinfo(message=f"{study_name} study successfully deleted")
-            lambda:self.open_frame(self.main_menu)
+            self.open_frame(self.main_menu)
 
     def open_edit_study_picker_window(self):
         
@@ -471,7 +468,7 @@ class Window():
 
         if study_names:
             self.add_participant_open = False
-            self.add_participant_study_picker = ttk.OptionMenu(self.add_participant_master_frame,self.add_participant_study_picker_var,"",*study_names,command=lambda:self.open_frame(self.open_add_participant_window))
+            self.add_participant_study_picker = ttk.OptionMenu(self.add_participant_master_frame,self.add_participant_study_picker_var,"",*study_names,command=self.open_add_participant_window)
             self.add_participant_study_picker.grid(row=1,column=0)
 
         else:
@@ -491,7 +488,7 @@ class Window():
         self.add_participant_frame = tk.Frame(self.add_participant_master_frame)
         self.add_participant_frame.grid(row=2,column=0)
 
-        self.current_frame = self.add_participant_frame
+        #self.current_frame = self.add_participant_frame
 
         self.add_participant_study_name = self.add_participant_study_picker_var.get()
 
@@ -539,7 +536,7 @@ class Window():
 
 
         #Finding all dates of study
-        study_dates = self.db.get_date_info_by_study(self,self.add_participant_study_name)
+        study_dates = self.db.get_date_info_by_study(self.add_participant_study_name)
 
         #cursor.execute(f"""SELECT date,is_in_house FROM Study_Date_times 
         #                   INNER JOIN study 
@@ -579,8 +576,6 @@ class Window():
         other_info = self.add_participant_other_info_entry.get("1.0",tk.END).rstrip()
         essential_info = [first_name,last_name,initials,birthday]
 
-        
-        
         #cursor.execute(f"SELECT initials FROM participant WHERE study_id = {study_id}")
         #all_initials = [initials[0] for initials in cursor.fetchall()]
 
