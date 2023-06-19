@@ -1,5 +1,5 @@
 from DatabaseAccess import *
-from window import *
+from Window import *
 
 import sqlite3 as sql
 
