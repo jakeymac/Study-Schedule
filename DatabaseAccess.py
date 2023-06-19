@@ -53,7 +53,6 @@ class DatabaseAccess:
                            WHERE study.study_name = '{study_name}'""")
         
         return self.cursor.fetchall()
-    
 
     def update_participant_column(self,participant_id,info,info_column_name):
         self.cursor.execute(f"""UPDATE Participant 
@@ -98,10 +97,10 @@ class DatabaseAccess:
                     
         self.cursor.execute(f"""INSERT INTO Participant (study_id,first_name,last_name,initials,birthday,other_info)
                             VALUES({study_id}, '{first_name}','{last_name}','{initials}','{birthday}',"{other_info}") """)
+        
         self.connect.commit()
 
         self.cursor.execute(f"""SELECT participant_id FROM Participant WHERE initials = '{initials}' """)
-
         participant_id = self.cursor.fetchone()[0]
 
         for date in date_dict:
@@ -125,6 +124,7 @@ class DatabaseAccess:
         self.cursor.execute(f"""UPDATE Participant_Date_Times 
                                 SET date = "{date}", is_in_house = "{in_house}" 
                                 WHERE study_id = "{study_id}" AND date= "{original_date}" """)
+        
         self.connect.commit()
 
 
@@ -194,7 +194,7 @@ class DatabaseAccess:
                         return
                     
                 self.cursor.execute(f"""INSERT INTO Participant (study_id,first_name,last_name,initials,birthday,other_info))
-                                        VALUES({study_id}, '{first_name}', '{last_name}','{initials}','{birthday}','{other_info}')""")
+                                        VALUES({study_id}, '{first_name}', '{last_name}','{initials.upper()}','{birthday}','{other_info}')""")
                 self.connect.commit()
 
                 self.cursor.execute(f"""SELECT participant_id FROM Participant WHERE initials = '{initials}' """)
