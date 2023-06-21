@@ -151,6 +151,21 @@ class DatabaseAccess:
         self.connect.commit()
 
         tk_mb.showinfo(message=f"{study_name} study successfully deleted")
+
+    
+    def delete_study_date(self,study_name,date):
+
+        study_id = self.get_study_id(study_name)
+        
+        self.cursor.execute(f"""DELETE FROM Participant_Date_Times
+                                WHERE study_id = '{study_id}' AND date = '{date}' """)
+        
+        self.connect.commit()
+
+        self.cursor.execute(f""" DELETE FROM Study_Date_Times 
+                                 WHERE study_id = '{study_id}' AND date = '{date}' """)
+        
+        self.connect.commit()
         
 
     def get_study_info(self,study_name):
@@ -158,6 +173,8 @@ class DatabaseAccess:
                             FROM study INNER JOIN Study_Date_Times 
                             ON Study_Date_Times.study_id = study.study_id 
                             WHERE study_name = '{study_name}' """)
+        
+        return self.cursor.fetchall()
         
     def get_study_other_info(self,study_name):
         self.cursor.execute(f"""SELECT study.study_info

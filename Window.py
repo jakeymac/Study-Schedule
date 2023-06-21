@@ -17,6 +17,9 @@ class Window():
 
         self.main_menu() #Open the main menu
         self.root.mainloop() #Get tkinter running for this window
+
+    def option_menu_action(self,function):
+        function()
     
     def open_frame(self,function):
         """Serves to open a new frame within the tkinter window\n
@@ -27,6 +30,7 @@ class Window():
             self.current_frame.destroy()
         #run the target function to open a new frame
         function()
+
 
     def main_menu(self):
         """Opens the StudySchedule main menu """
@@ -170,9 +174,10 @@ class Window():
         
         self.view_study_picker_var = tk.StringVar()
         study_names = self.db.get_study_names()
+
         if study_names:
             self.study_view_open = False
-            self.view_study_picker = ttk.OptionMenu(self.view_study_master_frame,self.view_study_picker_var,"",*study_names,command=self.display_study_info)
+            self.view_study_picker = ttk.OptionMenu(self.view_study_master_frame,self.view_study_picker_var,"",*study_names,command=lambda _:self.option_menu_action(self.display_study_info))
 
             self.view_study_picker.grid(row=1,column=0)
             self.exit_study_info_view_button = tk.Button(self.view_study_master_frame,text="Back to \nMain Menu",command=lambda:self.open_frame(self.main_menu))
@@ -263,7 +268,7 @@ class Window():
         study_names = self.db.get_study_names()
         if study_names:
             self.study_edit_open = False
-            self.edit_study_picker = ttk.OptionMenu(self.edit_study_master_frame,self.edit_study_picker_var,"",*study_names,command=lambda:self.open_frame(self.open_edit_study_window))
+            self.edit_study_picker = ttk.OptionMenu(self.edit_study_master_frame,self.edit_study_picker_var,"",*study_names,command=lambda _:self.option_menu_action(self.open_edit_study_window))
             self.edit_study_picker.grid(row=1,column=0)
         else:
             self.empty_label = tk.Label(self.edit_study_master_frame,text="Sorry, there are no \nexisting studies")
@@ -280,6 +285,8 @@ class Window():
             self.edit_study_frame.destroy()
         
         self.open_edit_study = True
+
+        self.edit_study_master_frame.destroy()
 
         self.edit_study_frame = tk.Frame(self.root)
         self.edit_study_frame.grid(row=2,column=0)
@@ -355,6 +362,13 @@ class Window():
         self.edit_study_save_button.grid(row=current_row+1,column=0,columnspan=2)
         self.back_to_main_menu_button = tk.Button(self.edit_dates_frame,text="Back to Main Menu",command=lambda:self.open_frame(self.main_menu))
         self.back_to_main_menu_button.grid(row=current_row+2,column=0,columnspan=2)
+
+    def delete_study_date(self,study_name,date,date_entry,check_button,current_row):
+        date_entry.destroy()
+        check_button.destroy()
+        self.delete_buttons.get(current_row).destroy()
+
+        self.db.delete_study_date(study_name,date)
 
     def finalize_edit_study(self):
         finalize_confirmation = tk_mb.askyesno(title="Save Info",message=f"Are you sure you want to save the info for {self.edit_study_picker_var.get()}?")
@@ -468,7 +482,7 @@ class Window():
 
         if study_names:
             self.add_participant_open = False
-            self.add_participant_study_picker = ttk.OptionMenu(self.add_participant_master_frame,self.add_participant_study_picker_var,"",*study_names,command=self.open_add_participant_window)
+            self.add_participant_study_picker = ttk.OptionMenu(self.add_participant_master_frame,self.add_participant_study_picker_var,"",*study_names,command=lambda _: self.option_menu_action(self.open_add_participant_window))
             self.add_participant_study_picker.grid(row=1,column=0)
 
         else:
