@@ -17,6 +17,10 @@ class DatabaseAccess:
         self.cursor.execute(f"SELECT initials,participant_id FROM Participant WHERE study_id = '{study_id}'")
         return self.cursor.fetchall()
     
+    def get_participant_ids(self,study_id):
+        self.cursor.execute(f"SELECT participant_id FROM Participant WHERE study_id = '{study_id}'")
+        return [participant_id[0] for participant_id in self.cursor.fetchall()]
+    
     ################################################################
     #NOTE:Could be updated to use participant ID instead of initials
     ################################################################
@@ -84,6 +88,20 @@ class DatabaseAccess:
         study_id = tuple(self.cursor.fetchone())[0]
 
         self.add_dates_to_study(study_id,study_date_dict)
+
+    def add_single_new_date_to_study(self,study_id,date,in_house):
+        self.cursor.execute(f"""INSERT INTO Study_Date_Times 
+                               (study_id,date,is_in_house) 
+                               VALUES ('{study_id}', '{date}', '{in_house}')""")
+        
+        self.connect.commit()
+
+        participant_ids = self.get_participant_ids(study_id)
+        for participant_id in participant_ids:
+            self.cursor.execute(f"""INSERT INTO Participant_Date_Times
+                                    (study_id,participant_id,date,is_in_house,time)
+                                    VALUES('{study_id}','{participant_id}','{date}','{in_house}','')""")
+            self.connect.commit()
 
     def add_dates_to_study(self,study_id,date_list):
         for date in date_list:

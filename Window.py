@@ -351,17 +351,17 @@ class Window():
             current_row += 1
 
 
-
-        #####NOTE NOTE NOTE NOTE 
-        ###CURRENT PLACE OF WORKING
-
-        self.new_date_button = tk.Button(self.edit_dates_frame,text="Add Dates",command=lambda:self.open_frame(lambda : self.add_more_study_dates(study_name)))
+        #This button simply uses the add_more_dates function instead of open_frame, because it 
+        # needs to exit the edit_dates_frame only after accessing the current changes to the dates of the study being edited
+        self.new_date_button = tk.Button(self.edit_dates_frame,text="Add Dates",command=lambda name = study_name:self.add_more_study_dates(name))
         self.new_date_button.grid(row=current_row,column=0,columnspan=2)
 
         self.edit_study_save_button = tk.Button(self.edit_dates_frame,text="Save",command=self.finalize_edit_study)
         self.edit_study_save_button.grid(row=current_row+1,column=0,columnspan=2)
         self.back_to_main_menu_button = tk.Button(self.edit_dates_frame,text="Back to Main Menu",command=lambda:self.open_frame(self.main_menu))
         self.back_to_main_menu_button.grid(row=current_row+2,column=0,columnspan=2)
+
+
 
     def delete_study_date(self,study_name,date,date_entry,check_button,current_row):
         date_entry.destroy()
@@ -405,6 +405,7 @@ class Window():
             self.current_changes.append(entry.get())
 
         
+        self.edit_study_frame.destroy()
         self.open_edit_study=False
         self.adding_study_dates_frame = tk.Frame(self.root)
         self.adding_study_dates_frame.pack()
@@ -429,32 +430,37 @@ class Window():
         self.new_dates_frame.grid(row=2,column=0)
         
 
+    #NOTE current place of work - working on adding buttons update this function to use database class
     def add_new_date(self,study_name,date,in_house):
         in_house_text = "In House" if in_house == 1 else "Follow-Up Visit"
 
         print("Testingggg")
-        self.cursor.execute(F"""SELECT study_id FROM study WHERE study_name = '{study_name}' """)
-        study_id = self.cursor.fetchone()[0]
+        #self.cursor.execute(F"""SELECT study_id FROM study WHERE study_name = '{study_name}' """)
+        #study_id = self.cursor.fetchone()[0]
 
-        
+        study_id = self.db.get_study_id(study_name)
+
         #date = self.new_date_entry.get_date().strftime("%m-%d-%y")
         #in_house = self.new_date_in_house_var.get()
-
+        
         
         if date not in self.current_changes and date not in self.new_dates:
-            self.cursor.execute(f"""INSERT INTO Study_Date_Times 
-                               (study_id,date,is_in_house) 
-                               VALUES ('{study_id}', '{date}', '{in_house}')""")
-            self.connect.commit()
+            # self.cursor.execute(f"""INSERT INTO Study_Date_Times 
+            #                    (study_id,date,is_in_house) 
+            #                    VALUES ('{study_id}', '{date}', '{in_house}')""")
+            # self.connect.commit()
 
-            self.cursor.execute(f"SELECT participant_id FROM Participant WHERE study_id = '{study_id}'")
-            participants = self.cursor.fetchall()
-            for participant in participants:
-                self.cursor.execute(f"""INSERT INTO Participant_Date_Times
-                                    (study_id,participant_id,date,is_in_house,time)
-                                    VALUES('{study_id}','{participant[0]}','{date}','{in_house}','')""")
-                self.connect.commit()
+            # self.cursor.execute(f"SELECT participant_id FROM Participant WHERE study_id = '{study_id}'")
+            # participants = self.cursor.fetchall()
+            # for participant in participants:
+            #     self.cursor.execute(f"""INSERT INTO Participant_Date_Times
+            #                         (study_id,participant_id,date,is_in_house,time)
+            #                         VALUES('{study_id}','{participant[0]}','{date}','{in_house}','')""")
+            #     self.connect.commit()
 
+            print("Pushing to database")
+            self.db.add_single_new_date_to_study(study_id,date,in_house)
+            print("Pushed to database")
 
             new_label = tk.Label(self.new_dates_frame,text=f"{date}-{in_house_text}")
             new_label.grid(row=len(self.new_dates))
