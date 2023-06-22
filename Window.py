@@ -20,6 +20,7 @@ class Window():
 
     def option_menu_action(self,function):
         function()
+
     
     def open_frame(self,function):
         """Serves to open a new frame within the tkinter window\n
@@ -31,6 +32,9 @@ class Window():
         #run the target function to open a new frame
         function()
 
+    def delete_widgets(self,widget_list):
+        for widget in widget_list:
+            widget.destroy()
 
     def main_menu(self):
         """Opens the StudySchedule main menu """
@@ -60,9 +64,13 @@ class Window():
 
         self.edit_participant_button = tk.Button(self.main_menu_frame,text="Edit Participant",command=lambda:self.open_frame(self.open_edit_participant_study_picker_window))
         self.edit_participant_button.grid(row=2,column=1)
+        
+        self.edit_participant_initials_widgets = []
 
         self.view_participant_button = tk.Button(self.main_menu_frame,text="View Participant",command=lambda:self.open_frame(self.open_view_participant_study_picker_window))
         self.view_participant_button.grid(row=3,column=1)
+
+        self.view_participant_initials_widgets = []
 
         self.view_entire_schedule_button = tk.Button(self.main_menu_frame,text="View Entire\n Study Schedule",command=lambda:self.open_frame(self.open_schedule_study_pickers_window))
         self.view_entire_schedule_button.grid(row=1,rowspan=2,column=2)
@@ -669,13 +677,14 @@ class Window():
         self.edit_participant_exit_button.grid(row=5,column=0)
 
 
+
     
     def open_edit_participant_intials_picker(self,*args):
-        if self.edit_participant_initials_picker_open:
-            self.edit_participant_initials_picker_frame.destroy()
+        #if self.edit_participant_initials_picker_open:
+        #    self.edit_participant_initials_picker_frame.destroy()
     
-        if self.open_participant_edit_button_placed:
-            self.open_edit_participant_button.config(text=f"Edit {self.edit_participant_initials_picker_var.get()}'s Info")
+        #if self.open_participant_edit_button_placed:
+        #    self.open_edit_participant_button.config(text=f"Edit {self.edit_participant_initials_picker_var.get()}'s Info")
         
         self.edit_participant_initials_picker_open = True
         
@@ -684,22 +693,43 @@ class Window():
         #cursor.execute(f"""SELECT study_id FROM study WHERE study_name = "{self.edit_participant_study_picker_var.get()}" """)
         #study_id = cursor.fetchone()[0]
 
+        
+        self.delete_widgets(self.edit_participant_initials_widgets)
+        self.edit_participant_initials_widget = []
+
         initials = self.db.get_initials(study_id)
+        if initials: #If there are initials returned (IE if there are any participants in the study)
+            #cursor.execute(f"SELECT initials FROM Participant WHERE study_id = {study_id}")
+            #participants = [participant[0] for participant in cursor.fetchall()] 
 
-        #cursor.execute(f"SELECT initials FROM Participant WHERE study_id = {study_id}")
-        #participants = [participant[0] for participant in cursor.fetchall()]
+            
 
-        self.edit_participant_initials_label = tk.Label(self.edit_participant_pickers_frame,text="Select Participant:")
-        self.edit_participant_initials_label.grid(row=2,column=0)
+            self.edit_participant_initials_label = tk.Label(self.edit_participant_pickers_frame,text="Select Participant:")
+            self.edit_participant_initials_label.grid(row=2,column=0)
 
-        self.edit_participant_initials_picker_var = tk.StringVar()
-        self.edit_participant_initials_picker = tk.OptionMenu(self.edit_participant_pickers_frame,self.edit_participant_initials_picker_var,*initials,command=self.place_edit_participant_button)
-        self.edit_participant_initials_picker.grid(row=3,column=0)
+            self.edit_participant_initials_widgets.append(self.edit_participant_initials_label)
+
+            self.edit_participant_initials_picker_var = tk.StringVar()
+            self.edit_participant_initials_picker = tk.OptionMenu(self.edit_participant_pickers_frame,self.edit_participant_initials_picker_var,*initials,command=self.place_edit_participant_button)
+            self.edit_participant_initials_picker.grid(row=3,column=0)
+
+            self.edit_participant_initials_widgets.append(self.edit_participant_initials_picker)
+
+        else:
+
+            self.no_participants_label = tk.Label(self.edit_participant_pickers_frame, text=f"No participants found\nfor {self.edit_participant_study_picker_var.get()}")
+            self.no_participants_label.grid(row=2,rowspan=1,column=0)
+
+            self.edit_participant_initials_widgets.append(self.no_participants_label)
+
+            
 
     def place_edit_participant_button(self,*args):
         self.open_participant_edit_button_placed = True
         self.open_edit_participant_button = tk.Button(self.edit_participant_pickers_frame,text=f"Edit {self.edit_participant_initials_picker_var.get()}'s Info",command=lambda:self.open_frame(self.open_edit_participant_info_window))
         self.open_edit_participant_button.grid(row=4,column=0)
+
+        self.edit_participant_initials_widgets.append(self.open_edit_participant_button)
 
     def open_edit_participant_info_window(self):
         self.edit_participant_info_frame = tk.Frame(self.root)
@@ -791,6 +821,8 @@ class Window():
         back_to_pickers_button.grid(row=9,column=1)
 
 
+    def finalize_edit_participant(self):
+
         #Retrieve all Info
         first_name_input = self.edit_first_name_entry.get()
         last_name_input = self.edit_last_name_entry.get()
@@ -852,6 +884,8 @@ class Window():
         lambda:self.open_frame(self.open_edit_participant_study_picker_window)
 
     
+
+
     def open_view_participant_study_picker_window(self):
         self.root.geometry("")
         self.view_participant_pickers_frame = tk.Frame(self.root)
@@ -881,41 +915,52 @@ class Window():
         #if self.view_participant_initials_picker_open:
             #self.view_participant_initials_picker_frame.destroy()
         
-        if self.open_participant_view_button_placed:
-            self.open_view_participant_button.config(text=f"View{self.view_participant_initials_picker_var.get()}'s Info")
+        #if self.open_participant_view_button_placed:
+        #    self.open_view_participant_button.config(text=f"View{self.view_participant_initials_picker_var.get()}'s Info")
         
+        self.delete_widgets(self.view_participant_initials_widgets)
+        self.view_participant_initials_widgets = []
+
         self.view_participant_initials_picker_open = True
 
         study_id = self.db.get_study_id(self.view_participant_study_picker_var.get())
         initials = self.db.get_initials(study_id)
 
-        #cursor.execute(f"""SELECT study_id FROM study WHERE study_name = "{self.view_participant_study_picker_var.get()}" """)
-        #study_id = cursor.fetchone()[0]
+        if initials:
 
-        #cursor.execute(f"SELECT initials FROM Participant WHERE study_id = {study_id}")
-        #participants = [participant[0] for participant in cursor.fetchall()]
-        
-        self.view_participant_initials_label = tk.Label(self.view_participant_pickers_frame,text="Select Participant:")
-        self.view_participant_initials_label.grid(row=2,column=0)
+            #cursor.execute(f"""SELECT study_id FROM study WHERE study_name = "{self.view_participant_study_picker_var.get()}" """)
+            #study_id = cursor.fetchone()[0]
 
-        self.view_participant_initials_picker_var = tk.StringVar()
-        self.view_participant_initials_picker = tk.OptionMenu(self.view_participant_pickers_frame,self.view_participant_initials_picker_var,*initials,command=self.place_view_participant_button)
-        self.view_participant_initials_picker.grid(row=3,column=0)
+            #cursor.execute(f"SELECT initials FROM Participant WHERE study_id = {study_id}")
+            #participants = [participant[0] for participant in cursor.fetchall()]
+            
+            self.view_participant_initials_label = tk.Label(self.view_participant_pickers_frame,text="Select Participant:")
+            self.view_participant_initials_label.grid(row=2,column=0)
+            self.view_participant_initials_widgets.append(self.view_participant_initials_label)
+
+            self.view_participant_initials_picker_var = tk.StringVar()
+            self.view_participant_initials_picker = tk.OptionMenu(self.view_participant_pickers_frame,self.view_participant_initials_picker_var,*initials,command=self.place_view_participant_button)
+            self.view_participant_initials_picker.grid(row=3,column=0)
+            self.view_participant_initials_widgets.append(self.view_participant_initials_picker)
+
+        else:
+            self.no_participants_label = tk.Label(self.view_participant_pickers_frame,text=f"No participants found\nfor {self.view_participant_study_picker_var.get()}")
+            self.no_participants_label.grid(row=2,column=0)
+            self.view_participant_initials_widgets.append(self.no_participants_label)
 
     def place_view_participant_button(self,*args):
         self.open_participant_view_button_placed = True
         self.open_view_participant_button = tk.Button(self.view_participant_pickers_frame,text=f"View{self.view_participant_initials_picker_var.get()}'s Info",command=lambda:self.open_frame(self.open_view_participant_info_window))
         self.open_view_participant_button.grid(row=4,column=0)
 
+        self.view_participant_initials_widgets.append(self.open_view_participant_button)
+
 
     def open_view_participant_info_window(self):
-        self.view_participant_master_frame = tk.Frame(self.root)
-        self.view_participant_master_frame.pack()
-        self.view_participant_info_frame = tk.Frame(self.view_participant_master_frame)
+        self.view_participant_info_frame = tk.Frame(self.root)
         self.view_participant_info_frame.grid(row=0,column=0)
 
-        self.current_frame = self.view_participant_master_frame
-
+        self.current_frame = self.view_participant_info_frame
 
         participant_info = self.db.get_all_participant_info(self.view_participant_initials_picker_var.get())
         #cursor.execute(f"""SELECT * FROM participant WHERE initials = "{self.view_participant_initials_picker_var.get()}" """)

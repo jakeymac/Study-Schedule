@@ -60,15 +60,15 @@ class DatabaseAccess:
 
     def update_participant_column(self,participant_id,info,info_column_name):
         self.cursor.execute(f"""UPDATE Participant 
-                            SET {info_column_name} = '{info}' 
-                            WHERE participant_id = {participant_id}""")
+                            SET {info_column_name} = "{info}"
+                            WHERE participant_id = {participant_id} """)
 
         self.connect.commit()
 
     def update_participant_date_times(self,participant_id, date,time):
         self.cursor.execute(f""" UPDATE Participant_Date_Times
                                  SET time = '{time}'
-                                 WHERE participant_id = {self.edit_participant_id} AND date = '{date}' """)
+                                 WHERE participant_id = {participant_id} AND date = '{date}' """)
         self.connect.commit()
         
     def update_study_info(self,study_info,study_name):
@@ -246,14 +246,3 @@ class DatabaseAccess:
                     self.connect.commit()
 
                 tk_mb.showinfo(title="Success",message=f"Participant {initials} has been added to {study_name}")
-
-        
-    
-
-    
-    
-
-
-
-
-
