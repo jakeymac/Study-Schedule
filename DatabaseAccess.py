@@ -39,7 +39,6 @@ class DatabaseAccess:
     
     def get_time_by_id_and_date(self,date,participant_id):
         self.cursor.execute(f""" SELECT time FROM Participant_Date_Times WHERE date = '{date}' AND participant_id = '{participant_id}' """)
-        print(self.cursor.fetchall())
         return str(self.cursor.fetchone()[0])
     
         
