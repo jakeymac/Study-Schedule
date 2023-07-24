@@ -21,7 +21,6 @@ class Window():
     def option_menu_action(self,function):
         function()
 
-    
     def open_frame(self,function):
         """Serves to open a new frame within the tkinter window\n
         function: the function that should be run to open a new frame"""
@@ -1093,8 +1092,10 @@ class Window():
             else:
                 values = [participant[0] + "  | "]
             for date in dates:
+
                 #cursor.execute(f"""SELECT time FROM Participant_Date_Times WHERE date = '{date}' AND participant_id = '{participant[1]}' """)
                 #time = str(cursor.fetchone()[0])
+
                 time = self.db.get_time_by_id_and_date(date,participant[1])
 
                 if len(time) == 6:

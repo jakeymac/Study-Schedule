@@ -39,6 +39,7 @@ class DatabaseAccess:
     
     def get_time_by_id_and_date(self,date,participant_id):
         self.cursor.execute(f""" SELECT time FROM Participant_Date_Times WHERE date = '{date}' AND participant_id = '{participant_id}' """)
+        print(self.cursor.fetchall())
         return str(self.cursor.fetchone()[0])
     
         
@@ -118,12 +119,17 @@ class DatabaseAccess:
         
         self.connect.commit()
 
-        self.cursor.execute(f"""SELECT participant_id FROM Participant WHERE initials = '{initials}' """)
+        self.cursor.execute(f"""SELECT participant_id FROM Participant WHERE initials = '{initials}' AND study_id = '{study_id}' """)
         participant_id = self.cursor.fetchone()[0]
+
+        print(participant_id)
 
         for date in date_dict:
             time = date_dict.get(date)[0].get()
             in_house = date_dict.get(date)[1]
+            print("Testing date dict")
+            print(time)
+            print(in_house)
 
             self.cursor.execute(f"""INSERT INTO Participant_Date_Times
                                 (study_id,participant_id,date,time,is_in_house)
